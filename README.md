@@ -1,6 +1,6 @@
-# Mongoose + Esp8266 + ATEC508 + LoRa
+# Mongoose + ESP8266 + ATEC508 + LoRa
 
-Le but de ce projet est de créer un réseau de capteurs connectés par WiFi vers un concentrateur (un Raspberry Pi) ou chaque capteur va exploiter un circuit dédié a la cryptographie : un ATECC508 connecté à l’ESP8266 qui, à travers Mongoose publie à intervalle regulier la donnée capturé sur un serveur MQTT securisé par l’utilisation de certificats et du protocole TLS.
+Le but de ce projet est de créer un réseau de capteurs (ESP8266) connectés par WiFi vers un concentrateur (un Raspberry Pi) où chaque capteur va exploiter un circuit dédié à la cryptographie (un ATECC508) connecté à l’ESP8266 qui à travers Mongoose publie à intervalle régulier la donnée capturé sur un serveur MQTT securisé par l’utilisation de certificats et du protocole TLS, cette donnée sera ensuite chiffré et transmis  entre deux concentrateurs à travers le protocole LoRa.
 
 ## Authors
 
