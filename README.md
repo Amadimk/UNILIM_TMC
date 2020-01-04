@@ -7,7 +7,7 @@ Le but de ce projet est de créer un réseau de capteurs (ESP8266) connectés pa
 
 ## Raspberry Pi & WiFi
 
-#### Préparation du démarrage bootp, PXE du Raspberry Pi
+### Préparation du démarrage bootp, PXE du Raspberry Pi
 
 Cette partie de la configuration provient des enseignements de Mr PIERRE-FRANCOIS BONNEFOI dans le TP3  de l'UE TMC et est accessible sur son site web : [p-fb.net](https://p-fb.net/master-2/tmc.html?L=0).
 
@@ -74,7 +74,7 @@ Export list for 127.0.0.1:
 /home/amadimk/TMC/RASPI/boot   *
 /home/amadimk/TMC/RASPI/client *
 ```
-#### Montage de NFS sur le Raspberry Pi
+##### Montage de NFS sur le Raspberry Pi
 * Modifier le point de montage du Raspberry Pi pour son filesystem, en éditant le fichier  
 /RASPI/boot/cmdline.txt
 ```
@@ -85,7 +85,7 @@ dwc_otg.lpm_enable=0 console=serial0,115200 console=tty1 root=/dev/nfsnfsroot=10
 ```
 10.20.30.1:/home/amadimk/TMC/RASPI/boot /boot nfs rsize=8192,wsize=8192,timeo=14,intr,noauto,x-systemd.automount   0   0
 ```
-#### Activation du service SSH sur le Raspberry PI
+##### Activation du service SSH sur le Raspberry PI
 Passer par le point de montage NFS, c-à-d le répertoire local correspondant au filesystem NFS :
 ```
 amadimk@pc:~/TMC/RASPI/client/lib/systemd/system$ cat sshswitch.service
@@ -101,7 +101,7 @@ ExecStart=/bin/sh -c "update-rc.d ssh enable && invoke-rc.d ssh start && rm -f/b
 [Install]
 ```
 Mettre en commentaire la ligne d’option ConditionPathExistsGlob.
-#### Mise en service du serveur TFTP, DNS, DHCP
+##### Mise en service du serveur TFTP, DNS, DHCP
 
 * utiliser un script sh pour lancer un serveur dhcp et dns avec la commande dnsmasq pour permettre au raspberry de booter une fois connecter à la machine :
 ```bash
@@ -117,8 +117,7 @@ sudo iptables -t nat -A POSTROUTING -s $PREFIX.0/24 -j MASQUERADE
 sudo dnsmasq -d -z -i $IF -F $PREFIX.100,$PREFIX.150,255.255.255.0,12h -O 3,$PREFIX.1-O 6,8.8.8.8,8.8.4.4 --pxe
 -service=0,"Raspberry Pi Boot" --enable-tftp --tftp-root=/home/amadimk/TMC/RASPI/boot
 ```
-
-
+### Mise en service du serveur TFTP, DNS, DHCP
 
 ### Authors
 
