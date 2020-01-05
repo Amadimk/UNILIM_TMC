@@ -129,7 +129,6 @@ Une fois les paquets installés on edite les fichiers de configurations de dnsma
 ```bash
 $ sudo mv /etc/dnsmasq.conf /etc/dnsmasq.conf.orig
 $ sudo nano /etc/dnsmasq.conf
-
 interface=wlan0        #choisir l'interface d'ecoute
 dhcp-range=192.168.4.2,192.168.0.20,255.255.255.0,24h
 address=/mqtt.com/192.168.4.1       # permettre au dns de faire la resolution d'un domaine ici le mqtt.com
