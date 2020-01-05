@@ -117,7 +117,65 @@ sudo iptables -t nat -A POSTROUTING -s $PREFIX.0/24 -j MASQUERADE
 sudo dnsmasq -d -z -i $IF -F $PREFIX.100,$PREFIX.150,255.255.255.0,12h -O 3,$PREFIX.1-O 6,8.8.8.8,8.8.4.4 --pxe
 -service=0,"Raspberry Pi Boot" --enable-tftp --tftp-root=/home/amadimk/TMC/RASPI/boot
 ```
-### Mise en service du serveur TFTP, DNS, DHCP
+### Connexion WiFi des ESP8266
+
+Pour permettre aux capteurs de joindre le concentrateur, il est necessaire de mettre en place un access point wifi sur le Raspberry Pi en installant les paquets hostapd et dnsmasq. Hostapd est un package qui permet de créer un hotspot sans fil à l’aide d’un Raspberry Pi, et dnsmasq quand a lui permet de créer et lancer un serveur DNS et DHCP facilement.
+```bash
+$ sudo apt-get install hostapd
+$ sudo apt-get install dnsmasq
+```
+Une fois les paquets installés on edite les fichiers de configurations de dnsmasq et hostpad pour créer le point d'accès :  
+/etc/dnsmasq.conf
+```bash
+$ sudo mv /etc/dnsmasq.conf /etc/dnsmasq.conf.orig
+$ sudo nano /etc/dnsmasq.conf
+
+interface=wlan0        #choisir l'interface d'ecoute
+dhcp-range=192.168.4.2,192.168.0.20,255.255.255.0,24h
+address=/mqtt.com/192.168.4.1       # permettre au dns de faire la resolution d'un domaine ici le mqtt.com
+```
+/etc/hostapd/hostapd.conf
+```bash
+$ sudo nano /etc/hostapd/hostapd.conf
+interface=wlan0
+driver=nl80211
+ssid=raspberryWifi01
+hw_mode=g
+channel=7
+wmm_enabled=0
+macaddr_acl=0
+auth_algs=1
+ignore_broadcast_ssid=0
+wpa=2
+wpa_passphrase=Raspberry01
+wpa_key_mgmt=WPA-PSK
+wpa_pairwise=TKIP
+rsn_pairwise=CCMP
+```
+
+Puis editer le fichier /etc/default/hostapd pour charger les configurations de hostpad 
+```bash
+$ sudo nano /etc/default/hostapd
+.............
+.
+
+ DAEMON_CONF=”/etc/hostapd/hostapd.conf”
+
+.
+..........
+
+```
+Activer le forwarding du noyaux
+```bash
+$ sudo nano /etc/default/hostapd
+$ sudo nano /etc/sysctl.conf
+net.ipv4.ip_forward=1
+```
+Puis reboot le raspberry
+```bash
+$ sudo reboot
+```
+
 
 ### Authors
 
