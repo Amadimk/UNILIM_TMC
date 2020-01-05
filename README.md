@@ -156,20 +156,17 @@ rsn_pairwise=CCMP
 Puis editer le fichier /etc/default/hostapd pour charger les configurations de hostpad 
 ```bash
 $ sudo nano /etc/default/hostapd
-.............
-.
 
- DAEMON_CONF=”/etc/hostapd/hostapd.conf”
-
-.
-..........
+ DAEMON_CONF=”/etc/hostapd/hostapd.conf” #modifier cette ligne comme suit
 
 ```
 Activer le forwarding du noyaux
 ```bash
 $ sudo nano /etc/default/hostapd
 $ sudo nano /etc/sysctl.conf
-net.ipv4.ip_forward=1
+
+net.ipv4.ip_forward=1        #modifier cette ligne comme suit
+
 ```
 Puis reboot le raspberry
 ```bash
