@@ -130,12 +130,20 @@ sudo dnsmasq -d -z -i $IF -F $PREFIX.100,$PREFIX.150,255.255.255.0,12h -O 3,$PRE
 ### Connexion WiFi des ESP8266
 
 Pour permettre aux capteurs de joindre le concentrateur, il est necessaire de mettre en place un access point wifi sur le Raspberry Pi en installant les paquets hostapd et dnsmasq. Hostapd est un package qui permet de créer un hotspot sans fil à l’aide d’un Raspberry Pi, et dnsmasq quand a lui permet de créer et lancer un serveur DNS et DHCP facilement.
+Se connecter en ssh au Raspberry Pi:
+```bash
+$ ssh pi@10.20.30.149
+```
+##### NB :
+*le mot de passe par defaut est : `raspberry`*
+
 ```bash
 $ sudo apt-get install hostapd
 $ sudo apt-get install dnsmasq
 ```
 Une fois les paquets installés on edite les fichiers de configurations de dnsmasq et hostpad pour créer le point d'accès :  
-/etc/dnsmasq.conf
+
+Pour dnsmasq le fichier `/etc/dnsmasq.conf`
 ```bash
 $ sudo mv /etc/dnsmasq.conf /etc/dnsmasq.conf.orig        #sauvergader les anciens configs de dnsmasq.
 $ sudo nano /etc/dnsmasq.conf                             # creer un nouveau fichier de configuration.
@@ -143,9 +151,11 @@ interface=wlan0        #choisir l'interface d'ecoute
 dhcp-range=192.168.4.2,192.168.0.20,255.255.255.0,24h
 address=/mqtt.com/192.168.4.1       # permettre au dns de faire la resolution d'un domaine ici le mqtt.com
 ```
-NB : la dernière ligne est une option de dnsmasq lui permettant d'associé une adresse IP à un nom symbolique qui sera utile lors de la verification des certificats envoyer par le serveur (Raspberry) au client (ESP8266). 
-Configurer le fichier de configuration /etc/hostapd/hostapd.conf de hostapd pour créer le point d'accèes e
+##### NB :
+*la dernière ligne est une option de dnsmasq lui permettant d'associé une adresse IP à un nom symbolique qui sera utile lors de la verification des certificats envoyer par le serveur (Raspberry) au client (ESP8266). 
+Configurer le fichier de configuration `/etc/hostapd/hostapd.conf` de hostapd pour créer le point d'accèes.*  
 
+Pour hostapd le fichier `/etc/hostapd/hostapd.conf`
 ```bash
 $ sudo nano /etc/hostapd/hostapd.conf
 interface=wlan0
@@ -163,21 +173,16 @@ wpa_key_mgmt=WPA-PSK
 wpa_pairwise=TKIP
 rsn_pairwise=CCMP
 ```
+Puis editer le fichier `/etc/default/hostapd` pour charger les configurations de hostpad en remplaçant la ligne qui contient DAEMON_CONF par `DAEMON_CONF=”/etc/hostapd/hostapd.conf”`.
 
-Puis editer le fichier /etc/default/hostapd pour charger les configurations de hostpad en remplaçant la ligne qui contient DAEMON_CONF par celle-ci dessous.
-```bash
- DAEMON_CONF=”/etc/hostapd/hostapd.conf” #modifier cette ligne comme suit
-
-```
 Activer le forwarding du noyaux
 ```bash
-$ sudo nano /etc/default/hostapd
 $ sudo nano /etc/sysctl.conf
 
-net.ipv4.ip_forward=1        #modifier cette ligne comme suit
+net.ipv4.ip_forward=1        #de-commenter cette ligne.
 
 ```
-Puis reboot le raspberry
+Puis reboot le raspberry.
 ```bash
 $ sudo reboot
 ```
