@@ -1,6 +1,6 @@
  # Mongoose + ESP8266 + ATEC508 & LoRa + MQTT + Raspberry Pi
 
-Le but de ce projet est de créer un réseau de capteurs (ESP8266) connectés par WiFi vers un concentrateur (un Raspberry Pi) où chaque capteur va exploiter un circuit dédié à la cryptographie (un ATECC508) connecté à l’ESP8266 qui à travers Mongoose publie à intervalle régulier la donnée capturé sur un serveur MQTT securisé par l’utilisation de certificats et du protocole TLS, cette donnée sera ensuite chiffré et transmis  entre deux concentrateurs à travers le protocole LoRa.
+Le but de ce projet est de créer un réseau de capteurs (ESP8266) connectés par WiFi vers un concentrateur (un Raspberry Pi) où chaque capteur va exploiter un circuit dédié à la cryptographie sur courbe elliptique (un ATECC508) connecté à l’ESP8266 qui à travers Mongoose publie à intervalle régulier la donnée capturé sur un serveur MQTT securisé par l’utilisation de certificats et du protocole TLS, cette donnée sera ensuite chiffré et transmis  entre deux concentrateurs à travers le protocole LoRa.
 
 ![alt text](https://github.com/Amadimk/UNILIM_TMC/blob/master/intro.png)
 
@@ -134,7 +134,7 @@ Se connecter en ssh au Raspberry Pi:
 ```bash
 $ ssh pi@10.20.30.149
 ```
-##### NB :
+***Remarque :**
 *le mot de passe par defaut est : `raspberry`*
 
 ```bash
@@ -151,7 +151,7 @@ interface=wlan0        #choisir l'interface d'ecoute
 dhcp-range=192.168.4.2,192.168.0.20,255.255.255.0,24h
 address=/mqtt.com/192.168.4.1       # permettre au dns de faire la resolution d'un domaine ici le mqtt.com
 ```
-##### NB :
+***Remarque :**
 *la dernière ligne est une option de dnsmasq lui permettant d'associé une adresse IP à un nom symbolique qui sera utile lors de la verification des certificats envoyer par le serveur (Raspberry) au client (ESP8266). 
 Configurer le fichier de configuration `/etc/hostapd/hostapd.conf` de hostapd pour créer le point d'accèes.*  
 
@@ -186,11 +186,43 @@ Puis reboot le raspberry.
 ```bash
 $ sudo reboot
 ```
+## Chiffrement ECC : clés et certificats
+
+Génération des clés privées de L'AC, du serveur et du client.
+```bash
+$ openssl ecparam -out ecc.ca.key.pem -name prime256v1 -genkey
+$ openssl ecparam -out ecc.raspeberry.key.pem -name prime256v1 -genkey
+$ openssl ecparam -out ecc.esp8266.key.pem -name prime256v1 -genkey
+```
+Génération du certificat auto-signé de l'AC qui sera utilisé pour signé ceux du serveur et client
+```bash
+$ openssl req -config <(printf "[req]\ndistinguished_name=dn\n[dn]\n[ext]\nbasicConstraints=CA:TRUE") -new -nodes -subj "/C=FR/L=Limoges/O=TMC/OU=IOT/CN=ACTMC" -x509 -extensions ext -sha256 -key ecc.ca.key.pem -text -out ecc.ca.cert.pem
+```
+Génération et signature du certificat pour le serveur (Raspberry Pi)
+```bash
+$ openssl req -config <(printf "[req]\ndistinguished_name=dn\n[dn]\n[ext]\nbasicConstraints=CA:FALSE") -new -subj "/C=FR/L=Limoges/O=TMC/OU=IOT/CN=mqtt.com" -reqexts ext -sha256 -key ecc.raspberry.key.pem -text -out ecc.raspberry.csr.pem
+
+$ openssl x509 -req -days 3650 -CA ecc.ca.cert.pem -CAkey ecc.ca.key.pem -CAcreateserial -extfile <(printf "basicConstraints=critical,CA:FALSE") -in ecc.csr.pem -text -out ecc.respberry.cert.pem -addtrust clientAuth
+```
+
+Génération et signature du certificat pour le client (Esp8266)
+```bash
+$ openssl req -config <(printf "[req]\ndistinguished_name=dn\n[dn]\n[ext]\nbasicConstraints=CA:FALSE") -new -subj "/C=FR/L=Limoges/O=TMC/OU=IOT/CN=esp8266" -reqexts ext -sha256 -key ecc.esp8266.key.pem -text -out ecc.esp8266.csr.pem
+
+$ openssl x509 -req -days 3650 -CA ecc.ca.cert.pem -CAkey ecc.ca.key.pem -CAcreateserial -extfile <(printf "basicConstraints=critical,CA:FALSE") -in ecc.esp8266.csr.pem -text -out ecc.esp8266.cert.pem -addtrust clientAuth
+```
+***Remarque :**
+Les certificats serveur et client doivent être signés par le même CA (Autorité de certification) pour faciliter l'authentification et de plus le "Common Name" **CN** du serveur doit correspondre au nom symbolique de la machine hôte du serveur ici le raspberry Pi : mqtt.com et le certificat du client pour être reconnu par Mongoose OS doit être entouré des lignes exactes :
+-----BEGIN CERTIFICATE-----
+...
+-----END CERTIFICATE-----*
+
+
 
 
 ### Authors
 
-* **Amadou Oury DIALLO** - *Initial work* - [PurpleBooth](https://github.com/Amadimk)
-* **Moetaz RABAI** - *Initial work* - [PurpleBooth](https://github.com/Jalix07)
-* **Wajdi KILANI** - *Initial work* - [PurpleBooth](https://github.com/PurpleBooth)
+* **Amadou Oury DIALLO**  - [Github](https://github.com/Amadimk)
+* **Moetaz RABAI** - [Github](https://github.com/Jalix07)
+* **Wajdi KILANI** - [Github](https://github.com/PurpleBooth)
 
