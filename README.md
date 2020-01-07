@@ -1,13 +1,22 @@
- # Mongoose + ESP8266 + ATEC508 & LoRa + MQTT + Raspberry Pi
+- [Raspberry Pi & WiFi](#raspwifi)
+  * [Préparation du démarrage bootp, PXE du Raspberry Pi](#preparation)
+      - [Montage de NFS sur le Raspberry Pi](#montage-de-nfs-sur-le-raspberry-pi)
+      - [Activation du service SSH sur le Raspberry PI](#activation-du-service-ssh-sur-le-raspberry-pi)
+      - [Mise en service du serveur TFTP, DNS, DHCP](#mise-en-service)
+  * [Connexion WiFi des ESP8266](#connexion-wifi-des-esp8266)
+- [Chiffrement ECC : clés et certificats](#chiffrement)
+- [Communications et sécurité](#communications)
+  * [Authors](#authors)
+    
 
 Le but de ce projet est de créer un réseau de capteurs (ESP8266) connectés par WiFi vers un concentrateur (un Raspberry Pi) où chaque capteur va exploiter un circuit dédié à la cryptographie sur courbe elliptique (un ATECC508) connecté à l’ESP8266 qui à travers Mongoose publie à intervalle régulier la donnée capturé sur un serveur MQTT securisé par l’utilisation de certificats et du protocole TLS, cette donnée sera ensuite chiffré et transmis  entre deux concentrateurs à travers le protocole LoRa.
 
 ![alt text](https://github.com/Amadimk/UNILIM_TMC/blob/master/intro.png)
 
 
-## Raspberry Pi & WiFi
+<h2 id="raspwifi"> Raspberry Pi & WiFi</h2>
 
-### Préparation du démarrage bootp, PXE du Raspberry Pi
+<h3 id="preparation"> Préparation du démarrage bootp, PXE du Raspberry Pi</h3>
 
 Cette partie de la configuration provient des enseignements de Mr PIERRE-FRANCOIS BONNEFOI dans le TP3  de l'UE TMC et est accessible sur son site web : [p-fb.net](https://p-fb.net/master-2/tmc.html?L=0).
 
@@ -112,7 +121,7 @@ ExecStart=/bin/sh -c "update-rc.d ssh enable && invoke-rc.d ssh start && rm -f/b
 ```
 *Mettre en commentaire la ligne d’option ConditionPathExistsGlob.*
 
-##### Mise en service du serveur TFTP, DNS, DHCP
+<h4 id="mise-en-service"> Mise en service du serveur TFTP, DNS, DHCP</h4>
 
 * utiliser un script `sh` pour lancer un serveur dhcp et dns avec la commande dnsmasq pour permettre au raspberry de booter une fois connecter à la machine :
 ```bash
@@ -186,7 +195,7 @@ Puis reboot le raspberry.
 ```bash
 $ sudo reboot
 ```
-## Chiffrement ECC : clés et certificats
+<h2 id="chiffrement"> Chiffrement ECC : clés et certificats</h2>
 
 Génération des clés privées de L'AC, du serveur et du client.
 ```bash
@@ -217,7 +226,7 @@ $ openssl x509 -req -days 3650 -CA ecc.ca.cert.pem -CAkey ecc.ca.key.pem -CAcrea
 ...  
 -----END CERTIFICATE-----*
 
-##  Communications et sécurité
+<h2 id="communications">  Communications et sécurité</h2>
 L’ESP8266 va se comporter comme un client MQTT qui effectue un ##publish## sur le topic `/esp8266` toute les 2 secondes en se connectant au serveur MQTT du Raspberry Pi jouant le rôle de concentrateur.
 
 Pour arriver à communiquer le concentrateur et le client on utilise le point d'accès déjâ créer au niveau de ce dernier sur lequel va se connecter client.  
