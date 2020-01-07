@@ -6,7 +6,7 @@
   * [Connexion WiFi des ESP8266](#connexion-wifi-des-esp8266)
 - [Chiffrement ECC : clés et certificats](#chiffrement)
 - [Communications et sécurité](#communications)
-  * [Authors](#authors)
+- [Authors](#authors)
     
 
 Le but de ce projet est de créer un réseau de capteurs (ESP8266) connectés par WiFi vers un concentrateur (un Raspberry Pi) où chaque capteur va exploiter un circuit dédié à la cryptographie sur courbe elliptique (un ATECC508) connecté à l’ESP8266 qui à travers Mongoose publie à intervalle régulier la donnée capturé sur un serveur MQTT securisé par l’utilisation de certificats et du protocole TLS, cette donnée sera ensuite chiffré et transmis  entre deux concentrateurs à travers le protocole LoRa.
@@ -227,17 +227,49 @@ $ openssl x509 -req -days 3650 -CA ecc.ca.cert.pem -CAkey ecc.ca.key.pem -CAcrea
 ```
 
 <h2 id="communications">  Communications et sécurité</h2>
-L’ESP8266 va se comporter comme un client MQTT qui effectue un **publish** sur le topic `/esp8266` toute les 2 secondes en se connectant au serveur MQTT du Raspberry Pi jouant le rôle de concentrateur.
+L’ESP8266 va se comporter comme un client MQTT qui effectue un **publish** sur le topic `/esp8266` toute les 2 secondes en se connectant au serveur MQTT du Raspberry Pi jouant le rôle de concentrateur et qui fait lui **subscribe** sur le même topic pour récevoir les données.
 
-Pour arriver à communiquer le concentrateur et le client on utilise le point d'accès déjâ créer au niveau de ce dernier sur lequel va se connecter client.  
+Pour arriver à communiquer le concentrateur et le client utilise le point d'accès wiFi déjâ créer au niveau de ce dernier sur lequel va se connecter le client.  
 
 **Sécurité :** Pour sécuriser les échanges de traffic entre le client et le concentrateur on va s'appuyer sur le protocole **TLS** supporter par le MQTT en utilisant les certificats créer ci-dessus.  
-Les configurations à effectués au niveau du concentrateur sont :
+Les configurations à effectués au niveau du concentrateur sont :  
+**Installation des paquets du serveur MQTT**
+```bash
+$ sudo apt-get install mosquitto
+$ sudo apt-get install mosquitto-clients
+```
+**Activer la protection de l'accès au serveur par un mot de passe**  
+Pour activer la protection d’accès au serveur MQTT par mot de passe, on ajoute dans le fichier `/etc/mosquitto/mosquitto.conf`
+```bash
+allow_anonymous false
+password_file /etc/mosquitto/mosquitto_passwd
+```
+Puis utiliser la commande  `mosquitto_passwd` pour créer le contenu du fichier password
+```bash
+$ sudo mosquitto_passwd -c /etc/mosquitto/mosquitto_passwd mqtt.tmc.com    # oû mqtt.tmc.com est le user
+```
+**Connexion TLS avec MQTT**  
+Pour la connexion par TLS, on ajoute dans le fichier `/etc/mosquitto/mosquitto.conf` :
+```bash
+listener 8883
+cafile /home/pi/NEWCERT/ecc.ca.cert.pem
+certfile /home/pi/NEWCERT/ecc.raspi.cert.pem
+keyfile /home/pi/NEWCERT/ecc.raspi.key.pem
+require_certificate true
+```
+Puis on redemarre le serveur MQTT pour prendre en compte la configuration effectuée:
+```bash
+$ sudo service mosquitto restart
+```
+**Tester la connexion TLS du serveur MQTT**  
+Pour effectuer un **publish** 
+```bash
+$ cd NEWCERT/
+$ mosquitto_pub -h mqtt.com -p 8883 -u mqtt.tmc.com -P tmctmctmc -t '/esp8266' --cafile ecc.ca.cert.pem  
+--cert ecc.esp8266.cert.pem --key ecc.es8266.key.pem -m 'Hello !'
+```
 
-
-
-
-### Authors
+## Authors
 
 * **Amadou Oury DIALLO**  - [Github](https://github.com/Amadimk)
 * **Moetaz RABAI** - [Github](https://github.com/Jalix07)
