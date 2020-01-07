@@ -219,10 +219,12 @@ $ openssl req -config <(printf "[req]\ndistinguished_name=dn\n[dn]\n[ext]\nbasic
 $ openssl x509 -req -days 3650 -CA ecc.ca.cert.pem -CAkey ecc.ca.key.pem -CAcreateserial -extfile <(printf   "basicConstraints=critical,CA:FALSE") -in ecc.esp8266.csr.pem -text -out ecc.esp8266.cert.pem -addtrust clientAuth
 ```
 ***Remarque :***
-*Les certificats serveur et client doivent être signés par le même CA (Autorité de certification) pour faciliter l'authentification et de plus le "Common Name" **CN** du serveur doit correspondre au nom symbolique de la machine hôte du serveur ici le raspberry Pi : mqtt.com et le certificat du client pour être reconnu par Mongoose OS doit être entouré des lignes exactes :  
+*Les certificats serveur et client doivent être signés par le même CA (Autorité de certification) pour faciliter l'authentification et de plus le "Common Name" **CN** du serveur doit correspondre au nom symbolique de la machine hôte du serveur ici le raspberry Pi : mqtt.com et le certificat du client pour être reconnu par Mongoose OS doit être entouré des lignes exactes :*  
+```bash
 -----BEGIN CERTIFICATE-----  
 ...  
------END CERTIFICATE-----*
+-----END CERTIFICATE-----
+```
 
 <h2 id="communications">  Communications et sécurité</h2>
 L’ESP8266 va se comporter comme un client MQTT qui effectue un ##publish## sur le topic `/esp8266` toute les 2 secondes en se connectant au serveur MQTT du Raspberry Pi jouant le rôle de concentrateur.
