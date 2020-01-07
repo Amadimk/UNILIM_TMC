@@ -227,7 +227,7 @@ $ openssl x509 -req -days 3650 -CA ecc.ca.cert.pem -CAkey ecc.ca.key.pem -CAcrea
 ```
 
 <h2 id="communications">  Communications et sécurité</h2>
-L’ESP8266 va se comporter comme un client MQTT qui effectue un ##publish## sur le topic `/esp8266` toute les 2 secondes en se connectant au serveur MQTT du Raspberry Pi jouant le rôle de concentrateur.
+L’ESP8266 va se comporter comme un client MQTT qui effectue un **publish** sur le topic `/esp8266` toute les 2 secondes en se connectant au serveur MQTT du Raspberry Pi jouant le rôle de concentrateur.
 
 Pour arriver à communiquer le concentrateur et le client on utilise le point d'accès déjâ créer au niveau de ce dernier sur lequel va se connecter client.  
 
