@@ -636,7 +636,7 @@ lancer le programme serveur LoRa
 ```bash
 $ sudo ./rf95_server
 ```
-Lancement Serveur|
+Réception du token JWT et déchiffrement coté serveur LoRa|
 :-------------------------------------:
 ![alt text](https://github.com/Amadimk/UNILIM_TMC/blob/master/serveur.png)
 
@@ -644,7 +644,9 @@ lancer le programme client LoRa
 ```bash
 $ sudo python3 mqtt_client.py
 ```
-![alt text](https://github.com/Amadimk/UNILIM_TMC/blob/master/client.png)
+Chiffrement du message avec AES et envoi du token JWT|
+:-------------------------------------:
+![alt text](https://github.com/Amadimk/UNILIM_TMC/blob/master/Client.png)
 
 ## Démo
 
