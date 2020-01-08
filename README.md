@@ -26,7 +26,7 @@ Le but de ce projet est de créer un réseau de capteurs (ESP8266) connectés pa
 
 Cette partie de la configuration provient des enseignements de Mr PIERRE-FRANCOIS BONNEFOI dans le TP3  de l'UE TMC et est accessible sur son site web : [p-fb.net](https://p-fb.net/master-2/tmc.html?L=0).
 
-* Tout d'abord on crée un repertoire `RASPI` dédié au *«filesystem»* du Raspberry PI  et on crée ensuite deux sous-répertoire : un nommé `client` contenant l’intégralité du système Raspbian du Raspberry ( répertoires `/etc`, `/home`, `/bin`, etc.) qui sera accessible par le protocole NFS qu'on utilisera pour le bootage en mode réseau et un autre nommé `boot` contenant le noyau et les fichiers de *«bas-niveau»* pour le raspberry Pi lui-même, qui sera accessible par le protocole bootp;
+* Tout d'abord on crée un repertoire `RASPI` dédié au *«filesystem»* du Raspberry PI  et on crée ensuite deux sous-répertoire : un nommé `client` contenant l’intégralité du système Raspbian du Raspberry ( répertoires `/etc`, `/home`, `/bin`, etc.) qui sera accessible par le protocole NFS qu'on utilisera pour le bootage en mode réseau et un autre nommé `boot` contenant le noyau et les fichiers de *«bas-niveau»* pour le Raspberry Pi lui-même, qui sera accessible par le protocole bootp;
 
 ```bash
 $ mkdir RASPI
