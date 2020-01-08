@@ -616,6 +616,20 @@ if (rf95.recv(buf, &len)) {
       printf("\n");
 .....
 ```
+**Compiler et tester**
+Pour Compiler :
+```cpp
+$ make
+```
+lancer le programme serveur LoRa
+```bash
+$ sudo ./rf95_server
+```
+lancer le programme client LoRa
+```bash
+$ sudo python3 mqtt_client.py
+```
+## Démo
 
 ## Authors
 
