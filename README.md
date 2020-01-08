@@ -635,5 +635,5 @@ $ sudo python3 mqtt_client.py
 
 * **Amadou Oury DIALLO**  - [Github](https://github.com/Amadimk)
 * **Moetaz RABAI** - [Github](https://github.com/Jalix07)
-* **Wajdi KILANI** - [Github](https://github.com/PurpleBooth)
+* **Wajdi KILANI** - [Github](https://github.com/kilanix/)
 
