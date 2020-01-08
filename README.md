@@ -2,15 +2,17 @@
 
 # Table of contents
 
-- [Raspberry Pi & WiFi](#raspwifi)
-  * [Préparation du démarrage bootp, PXE du Raspberry Pi](#preparation)
-      - [Montage de NFS sur le Raspberry Pi](#montage-de-nfs-sur-le-raspberry-pi)
-      - [Activation du service SSH sur le Raspberry PI](#activation-du-service-ssh-sur-le-raspberry-pi)
-      - [Mise en service du serveur TFTP, DNS, DHCP](#mise-en-service)
-  * [Connexion WiFi des ESP8266](#connexion-wifi-des-esp8266)
-- [Chiffrement ECC : clés et certificats](#chiffrement)
-- [Communications et sécurité](#communications)
-- [Authors](#authors)
+1. [Raspberry Pi & WiFi](#raspwifi)  
+  1.1 [Préparation du démarrage bootp, PXE du Raspberry Pi](#preparation)  
+         - [Montage de NFS sur le Raspberry Pi](#montage-de-nfs-sur-le-raspberry-pi)  
+         - [Activation du service SSH sur le Raspberry PI](#activation-du-service-ssh-sur-le-raspberry-pi)  
+         - [Mise en service du serveur TFTP, DNS, DHCP](#mise-en-service)  
+  1.2 [Connexion WiFi des ESP8266](#connexion-wifi-des-esp8266)  
+2. [Chiffrement ECC : clés et certificats](#chiffrement)  
+3. [Communications et sécurité](#communications)  
+  3.1 [Raspberry Pi et Esp8266 : WiFi et MQTT](#raspiesp8266)  
+  3.2 [Raspberry Pi et Raspberry Pi : LoRa](#raspiraspi)  
+4. [Authors](#authors)  
     
 
 Le but de ce projet est de créer un réseau de capteurs (ESP8266) connectés par WiFi vers un concentrateur (un Raspberry Pi) où chaque capteur va exploiter un circuit dédié à la cryptographie sur courbe elliptique (un ATECC508) connecté à l’ESP8266 qui à travers Mongoose publie à intervalle régulier la donnée capturé sur un serveur MQTT securisé par l’utilisation de certificats et du protocole TLS, cette donnée sera ensuite chiffré et transmis  entre deux concentrateurs à travers le protocole LoRa.
@@ -231,9 +233,10 @@ $ openssl x509 -req -days 3650 -CA ecc.ca.cert.pem -CAkey ecc.ca.key.pem -CAcrea
 ```
 
 <h2 id="communications">  Communications et sécurité</h2>
+<h3 id="raspiesp8266"> Raspberry Pi et Esp8266 : Wifi et MQTT </h3>
 L’ESP8266 va se comporter comme un client MQTT qui effectue un **publish** sur le topic `/esp8266` toute les 2 secondes en se connectant au serveur MQTT du Raspberry Pi jouant le rôle de concentrateur et qui fait lui **subscribe** sur le même topic pour récevoir les données.
 
-Pour arriver à communiquer le concentrateur et le client utilise le point d'accès wiFi déjâ créer au niveau de ce dernier sur lequel va se connecter le client.  
+Pour communiquer le concentrateur et le client utilise le point d'accès wiFi déjâ créer au niveau de ce dernier sur lequel va se connecter le client.  
 
 **Sécurité :** Pour sécuriser les échanges de traffic entre le client et le concentrateur on va s'appuyer sur le protocole **TLS** supporter par le MQTT en utilisant les certificats créer ci-dessus.  
 Les configurations à effectués au niveau du concentrateur sont :  
@@ -432,11 +435,187 @@ Slot 0 is a ECC private key slot
 Parsed EC PRIVATE KEY
 Data zone is locked, will perform encrypted write using slot 4 using slot4.key
 SetKey successful.
-
 ```
+<h3 id="raspiraspi"> Raspberry Pi et Raspberry Pi : LoRa </h3>
 
+Le Raspberry Pi qui est configurer avec le serveur MQTT va se comporter comme un client LoRa en récupérant la donnée publier par le composant ESP8266 et l'envoi au second Raspberry Pi qui se comporte comme serveur à travers une communication Radio LoRa.
+**Sécurité :** Pour sécuriser les échanges de traffic entre le  Raspberry Pi client et celui serveur on va utiliser un chiffrement **AES-128** puis on utilisera un **Json Web Token (JWT)** chiffré et signé pour l'envoyer au raspberry qui joûe le rôle de serveur.    
 
+Pour utiliser la radio LoRa on  va coiffer nos raspberry Pi d’un dragino, intégrant un « transceiver » LoRa ainsi qu’un GPS.
+Le Raspberry Pi et le composant LoRa vont communiquer par l’intermédiaire du bus SPI. qu'on active sur le raspberry.  
+**Configuration initiale du Raspberry Pi**  
+*La procédure de configuration du Raspberry Pi peut changer suivant la version de votre distribution Raspbian.*
+```bash
+$ sudo raspi-config
+```
+Naviguer dans les menus jusqu’à trouver **« Interfacing Options »** puis l’option **« SPI »** à activer.
+***Remarque :***
+*Une antenne doit toujours être connectée sur le port LoRa, sous peine d’endommager le composant LoRa*  
+Mettre à jour le Raspberry Pi
+```bash
+$ sudo apt-get update
+$ sudo apt-get upgrade
+$ sudo rpi-update
+$ sudo reboot
+```
+Pour l’utilisation des broches GPIOs et du bus SPI on utilise la bibliothèque bcm2835
+```bash
+$ wget http://www.airspayce.com/mikem/bcm2835/bcm2835-1.58.tar.gz
+$ tar zxvf bcm2835-1.58.tar.gz
+$ cd bcm2835-1.58
+$ ./configure
+$ make
+$ sudo make check
+$ sudo make install
+```
+*Pour le bon fonctionnement de la bibliothèque bcm2835 sur Raspberry Pi 3, il faut éditer le fichier
+`/boot/config.txt` et ajouter à la fin*
+```bash
+dtoverlay=gpio-no-irq
+```
+Pour l’utilisation du LoRa, on utilise la bilbliothèque suivante :
+```bash
+$ git clone https://github.com/hallard/RadioHead
+$ cd RadioHead/examples/raspi/rf95
+```
+On modifie les deux fichier sources : `rf95_server.cpp` et `rf95_client.cpp` pour
+sélectionner le dragino en commentant la ligne qui contient `#define BOARD_LORASPI` et décommenter la ligne contient `//#define BOARD_DRAGINO_PIHAT` ensuite on adapte ces deux fichiers à notre projet pour chiffrer en AES-128 et utiliser le JWT côté client LoRa et faire l'opération inverse côte serveur. Pour ce faire on va écrire un script python coté client et à l'aide des bibliothéques **python-paho-mqtt**, **jwcrypto** et **Crypto** on va pouvoir respectivement créer un client MQTT en **subscribe** utilisant une loop et un callback à la réception d'une donnée publier par le composant ESP8266, créer un JWT token et Chiffrer en AES. A partir du script python on éxecute une command qui lance le programme client LoRa qui lui, est en écrit en langage C++, Il est donc indispensable d'adapter le code C++ pour lui permettre de récupérer le JWT Token en argument.  
 
+**Script python côté client LoRa  :**  
+`RadioHead/examples/raspi/rf95/mqtt_client.py`
+```python
+#!/bin/python3
+import paho.mqtt.client as mqtt
+import os, ssl, json, binascii, base64, jwt, subprocess
+from urllib.parse import urlparse
+from Crypto import Random
+from Crypto.Cipher import AES
+
+cafile ="/home/pi/NEWCERT/ecc.ca.cert.pem"
+cert = "/home/pi/NEWCERT/ecc.raspi.cert.pem"
+key = "/home/pi/NEWCERT/ecc.raspi.key.pem"
+asymetrickey="/home/pi/NEWCERT/key"
+
+def encrypt(message, passphrase):
+    aes = AES.new(passphrase, AES.MODE_CBC, '0123456789123456')
+    return base64.b64encode(aes.encrypt(message))
+
+def on_message(client, obj, msg):
+    print(msg.topic + " " + str(msg.qos) + " " + str(msg.payload))
+    data=encrypt(msg.payload,"tmctmctmctmctmcA")
+    command ="./rf95_client "+jwt.encode( {'data':data.decode('utf-8') }, "MQTT", algorithm='HS256').decode('utf-8')
+    os.system("%s"%(command))
+
+mqttc = mqtt.Client()
+
+# Assign event callbacks
+mqttc.on_message = on_message
+
+url_str = os.environ.get('CLOUDMQTT_URL', 'mqtt://mqtt.com:8883//esp8266')
+url = urlparse(url_str)
+topic = url.path[1:] or '/esp8266'
+
+# Connect
+mqttc.username_pw_set("mqtt.tmc.com", "tmctmctmc")
+mqttc.tls_set(ca_certs=cafile, certfile=cert, keyfile=key, cert_reqs=ssl.CERT_REQUIRED, tls_version=ssl.PROTOCOL_TLS, ciphers=None)
+mqttc.connect(url.hostname, url.port)
+
+# Start subscribe, with QoS level 0
+mqttc.subscribe(topic, 0)
+
+rc = 0
+while rc == 0:
+    rc = mqttc.loop()
+```
+Pour adapter le programme client LoRa `C++` il suffit de remplacer la partie de l'envoi du message par :
+`RadioHead/examples/raspi/rf95/rf95_client.cpp`
+```cpp
+.....
+ // Send a message to rf95_server
+ const char* msg1;
+ std::string str = argv[1];  // On récupére l'argument du programme
+ msg1 = str.c_str();
+ size_t length = strlen(msg1) + 1;
+	
+ const char* beg = msg1;
+ const char* end = msg1 + length;
+ uint8_t* msg2 = new uint8_t[length];
+ 
+ size_t i = 0;
+ for (; beg != end; ++beg, ++i){
+   msg2[i] = (uint8_t)(*beg);
+ }
+ uint8_t data[] = "hi";
+ uint8_t len = sizeof(data);
+ 
+ printf("Sending %02d bytes to node #%d => ", len, RF_GATEWAY_ID );
+ printbuffer(msg2, length);
+ printf("\n" );
+ rf95.send(msg2, length);
+ rf95.waitPacketSent();
+ exit(1);
+ ......
+```
+Côté serveur LoRa on écrit aussi un script en python récevant en argument un JWT, le décode et déchiffre l'AES avec une clé partagée avec le client. Le script python sera éxecuté par le programme serveur LoRa `C++` à la réception de chaque paquets LoRa, il est donc indispensable comme pour le client LoRa de modifier le programme serveur.
+
+**Script python côté serveur LoRa  :**  
+`RadioHead/examples/raspi/rf95/mqtt_decrypt.py`
+```python
+#!/bin/python3
+import jwt, subprocess, sys, binascii,os, ssl, base64
+from Crypto.Cipher import AES
+
+data = sys.argv[1]
+print("Receive JWT token : " +data)
+encoded=""
+try:
+        encoded = jwt.decode(data, "MQTT")
+        print("Decoded JWT data (encoded base64 + AES ) : " + encoded['data'])
+except:
+        print("Erreur decode JWT")
+        exit(1)
+        
+decryption_suite = AES.new('tmctmctmctmctmcA', AES.MODE_CBC, '0123456789123456')
+try:
+        plain_text = decryption_suite.decrypt(base64.b64decode(encoded['data']))
+        print("Decoded AES data : " + plain_text.decode('utf-8'))
+except:
+        print("Erreur AES decrypt")
+        exit(1)
+```
+Pour la modification du programme serveur LoRa on remplace dans la partie receive du code par celui ci-dessous :
+`RadioHead/examples/raspi/rf95/rf95_serveur.cpp`
+```cpp
+.....
+if (rf95.recv(buf, &len)) {
+  printf("Packet[%02d] #%d => #%d %ddB: \n", len, from, to, rssi);
+  printbuffer(buf, len);
+  printf("\n");
+  std::string convert;
+  convert.assign(buf, buf+len);
+
+  char buffer[512];
+  std::string result = "";
+  std::string str = "python3 mqtt_decrypt.py \""+convert+"\"";
+  const char * command = str.c_str();
+  FILE* pipe = popen(command, "r");
+	 if (!pipe) throw std::runtime_error("popen() failed!");
+  try {
+        while (fgets(buffer, sizeof buffer, pipe) != NULL) {
+             result += buffer;
+             }
+       } catch (std::string const& chaine){
+       pclose(pipe);
+       throw;
+     }
+     std::cout << result << std::endl;
+     pclose(pipe);
+     } else {
+      Serial.print("receive failed");
+      }
+      printf("\n");
+.....
+```
 
 ## Authors
 
