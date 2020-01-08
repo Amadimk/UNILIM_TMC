@@ -440,7 +440,7 @@ Pour lancer la console mos et voir les activités du composant esp8266 :
 ```bash
 $ mos console
 ```
-echange de certificat esp8266-raspberry| Connexion MQTT
+Echange de certificat ESP8266-Raspberry| Connexion MQTT
 :-------------------------------------:|:-------------------------------------:
 ![](https://github.com/Amadimk/UNILIM_TMC/blob/master/mos.png)  |  ![](https://github.com/Amadimk/UNILIM_TMC/blob/master/mqtt.png)
 
