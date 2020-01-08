@@ -436,6 +436,16 @@ Parsed EC PRIVATE KEY
 Data zone is locked, will perform encrypted write using slot 4 using slot4.key
 SetKey successful.
 ```
+Pour lancer la console mos et voir les activités du composant esp8266 :  
+```bash
+$ mos console
+```
+![alt text](https://github.com/Amadimk/UNILIM_TMC/blob/master/mos.png)
+
+![alt text](https://github.com/Amadimk/UNILIM_TMC/blob/master/mqtt.png)
+
+![alt text](https://github.com/Amadimk/UNILIM_TMC/blob/master/tls.png)
+
 <h3 id="raspiraspi"> Raspberry Pi et Raspberry Pi : LoRa </h3>
 
 Le Raspberry Pi qui est configurer avec le serveur MQTT va se comporter comme un client LoRa en récupérant la donnée publier par le composant ESP8266 et l'envoi au second Raspberry Pi qui se comporte comme serveur à travers une communication Radio LoRa.
@@ -616,7 +626,7 @@ if (rf95.recv(buf, &len)) {
       printf("\n");
 .....
 ```
-**Compiler et tester**
+**Compiler et tester**  
 Pour Compiler :
 ```cpp
 $ make
@@ -625,15 +635,19 @@ lancer le programme serveur LoRa
 ```bash
 $ sudo ./rf95_server
 ```
+![alt text](https://github.com/Amadimk/UNILIM_TMC/blob/master/serveur.png)
+
 lancer le programme client LoRa
 ```bash
 $ sudo python3 mqtt_client.py
 ```
+![alt text](https://github.com/Amadimk/UNILIM_TMC/blob/master/client.png)
+
 ## Démo
 
 ## Authors
 
 * **Amadou Oury DIALLO**  - [Github](https://github.com/Amadimk)
 * **Moetaz RABAI** - [Github](https://github.com/Jalix07)
-* **Wajdi KILANI** - [Github](https://github.com/kilanix/)
+* **Wajdi KILANI** - [Github](https://github.com/PurpleBooth)
 
