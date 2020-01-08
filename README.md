@@ -1,3 +1,7 @@
+# Mongoose + ESP8266 + ATEC508 & LoRa + MQTT + Raspberry Pi
+
+# Table of contents
+
 - [Raspberry Pi & WiFi](#raspwifi)
   * [Préparation du démarrage bootp, PXE du Raspberry Pi](#preparation)
       - [Montage de NFS sur le Raspberry Pi](#montage-de-nfs-sur-le-raspberry-pi)
@@ -268,6 +272,171 @@ $ cd NEWCERT/
 $ mosquitto_pub -h mqtt.com -p 8883 -u mqtt.tmc.com -P tmctmctmc -t '/esp8266' --cafile ecc.ca.cert.pem  
 --cert ecc.esp8266.cert.pem --key ecc.es8266.key.pem -m 'Hello !'
 ```
+Pour effetcuer **subscribe** 
+```bash
+$ cd NEWCERT/
+$ mosquitto_sub -h mqtt.com -p 8883 -u mqtt.tmc.com -P tmctmctmc -t '/esp8266' --cafile ecc.ca.cert.pem  
+--cert ecc.esp8266.cert.pem --key ecc.es8266.key.pem
+Hello !
+```
+Pour la configuration du client ESP8266 on télécharge le système moongose OS pour générer un flash à intégrer dans le composant.  
+**Installation de Mongoose OS et d’une application de démonstration**  
+Site de l’OS : https://mongoose-os.com
+```bash
+$ sudo add-apt-repository ppa:mongoose-os/mos
+$ sudo apt-get update
+$ sudo apt-get install mos
+$ mos --help
+$ mos
+```
+Installation de docker avec transfert des droits d’exécution à l’utilisateur indispensable générer un flash :
+```bash
+$ sudo apt install docker.io
+$ sudo groupadd docker
+$ sudo usermod -aG docker $USER
+```
+Installation d’une application de démonstration à adapter pour notre projet :
+```bash
+$ git clone https://github.com/mongoose-os-apps/empty my-app
+```
+Pour l’utilisation de MQTT dans Mongoose OS on modifie le fichier `mos.yml` se trouvant dans l'application de démonstration comme suit :
+```yaml
+$ cd my-app
+$ cat mos.yml
+author: mongoose-os
+description: A Mongoose OS app skeleton
+version: 1.0
+libs_version: ${mos.version}
+modules_version: ${mos.version}
+mongoose_os_version: ${mos.version}
+# Optional. List of tags for online search.
+tags:
+- c
+# List of files / directories with C sources. No slashes at the end of dir names.
+sources:
+- src
+# List of dirs. Files from these dirs will be copied to the device filesystem
+filesystem:
+- fs
+config_schema:
+- ["debug.level", 3]
+- ["sys.atca.enable", "b", true, {title: "Activation du composant ATEC508"}]
+- ["i2c.enable", "b", true, {title: "Enable I2C"}]
+- ["sys.atca.i2c_addr", "i", 0x60, {title: "I2C address of the chip"}]
+- ["mqtt.enable", "b", true, {title: "Activation du service MQTT"}]
+- ["mqtt.server", "s", "mqtt.com.net:8883", {title: "Adresse du serveur MQTT à joindre"}]
+- ["mqtt.pub", "s", "/esp8266", {title: "Le Topic "}]
+- ["mqtt.user", "s", "mqtt.tmc.com", {title: "Utilisateur pour acceder au serveur MQTT"}]
+- ["mqtt.pass", "s", "tmctmctmc", {title: "Mot de passe du serveur MQTT"}]
+- ["mqtt.ssl_ca_cert", "s", "ecc.ca.cert.pem", {title: "Le certificat AC pour verifier le   
+certificat du serveur"}]
+- ["mqtt.ssl_cert", "s", "ecc.esp8266.cert.pem", {title: "Le certificat du client"}]
+- ["mqtt.ssl_key", "ATCA:0"]
+cdefs:
+MG_ENABLE_MQTT: 1
+# List of libraries used by this app, in order of initialisation
+libs:
+- origin: https://github.com/mongoose-os-libs/ca-bundle
+- origin: https://github.com/mongoose-os-libs/rpc-service-config
+- origin: https://github.com/mongoose-os-libs/rpc-service-atca
+- origin: https://github.com/mongoose-os-libs/rpc-service-fs
+- origin: https://github.com/mongoose-os-libs/rpc-mqtt
+- origin: https://github.com/mongoose-os-libs/rpc-uart
+- origin: https://github.com/mongoose-os-libs/wifi
+# Used by the mos tool to catch mos binaries incompatible with this file format
+manifest_version: 2017-05-18
+```
+***Remarque :***
+*Le certificat du CA `ecc.ca.cert.pem` et du client `ecc.esp8266.cert.pem` doivent être copiés dans le sous-répertoire  `fs` de l'application correspondant aux fichiers installés dans l’ESP8266.*  
+Le code source de l’application Mongoose OS se trouve dans le sous-repertoire `src/main.c`, on le modifie pour l'adapter à notre projet :  
+```c
+$ cd src
+$ cat main.c
+#include <stdio.h>
+#include "mgos.h"
+#include "mgos_mqtt.h"
+static void my_timer_cb(void *arg) {
+char *message = "Hello i am esp8266 !";
+mgos_mqtt_pub("/esp8266", message, strlen(message), 1, 0);
+(void) arg;
+}
+enum mgos_app_init_result mgos_app_init(void) {
+mgos_set_timer(2000, MGOS_TIMER_REPEAT, my_timer_cb, NULL);
+return MGOS_APP_INIT_SUCCESS;
+}
+```
+**Générer un flash pour l'esp8266 avec Mongoose OS :**  
+Pour compiler et générer un flash:
+```bash
+$ mos build --local --arch esp8266
+Warning: --arch is deprecated, use --platform
+
+Firmware saved to /home/amadimk/MASTER2/TMC/PROJET/my-app/build/fw.zip
+```
+Pour Flasher :
+```bash
+$  mos flash
+
+Loaded my-app/esp8266 version 1.0 (20200102-195717/2.13.0-ge44f822-master-dirty)
+Using port /dev/ttyUSB0
+Opening /dev/ttyUSB0 @ 115200...
+Connecting to ESP8266 ROM, attempt 1 of 10...
+  Connected, chip: ESP8266EX
+Running flasher @ 921600...
+  Flasher is running
+Flash size: 16777216, params: 0x029f (dio,128m,80m)
+Deduping...
+     2320 @ 0x0 -> 0
+   262144 @ 0x8000 -> 4096
+   629616 @ 0x100000 -> 0
+      128 @ 0xffc000 -> 0
+Writing...
+     4096 @ 0x7000
+     4096 @ 0x10000
+     4096 @ 0x3fb000
+Wrote 12288 bytes in 0.13 seconds (760.82 KBit/sec)
+Verifying...
+     2320 @ 0x0
+     4096 @ 0x7000
+   262144 @ 0x8000
+   629616 @ 0x100000
+     4096 @ 0x3fb000
+      128 @ 0xffc000
+Booting firmware...
+All done!
+```
+Pour configurer le composant ESP8266 à se connecter sur le point d'accèes WiFi :
+```bash
+$ mos wifi raspberryWifi01  Raspberry
+
+Using port /dev/ttyUSB0
+Getting configuration...
+Setting new configuration...
+```
+Maintenant il suffit d'installer la clé privée de notre composant dans l’ATECC508 :
+```bash
+$ openssl rand -hex 32 > slot4.key
+$ mos -X atca-set-key 4 slot4.key --dry-run=false
+
+AECC508A rev 0x5000 S/N 0x012352aad1bbf378ee, config is locked, data is locked
+Slot 4 is a non-ECC private key slot
+SetKey successful.
+```
+Puis :
+```bash
+$ mos -X atca-set-key 0 ecc.esp8266.key.pem --write-key=slot4.key --dry-run=false
+
+Using port /dev/ttyUSB0
+ATECC508A rev 0x5000 S/N 0x0123fb976eb9b4f3ee, config is locked, data is locked
+Slot 0 is a ECC private key slot
+Parsed EC PRIVATE KEY
+Data zone is locked, will perform encrypted write using slot 4 using slot4.key
+SetKey successful.
+
+```
+
+
+
 
 ## Authors
 
