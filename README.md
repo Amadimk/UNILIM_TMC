@@ -440,9 +440,10 @@ Pour lancer la console mos et voir les activités du composant esp8266 :
 ```bash
 $ mos console
 ```
-![alt text](https://github.com/Amadimk/UNILIM_TMC/blob/master/mos.png)
+Solarized dark             |  Solarized Ocean
+:-------------------------:|:-------------------------:
+![](https://github.com/Amadimk/UNILIM_TMC/blob/master/mos.png)  |  ![](https://github.com/Amadimk/UNILIM_TMC/blob/master/mqtt.png)
 
-![alt text](https://github.com/Amadimk/UNILIM_TMC/blob/master/mqtt.png)
 
 ![alt text](https://github.com/Amadimk/UNILIM_TMC/blob/master/tls.png)
 
