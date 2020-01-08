@@ -450,7 +450,7 @@ Capture du traffic chiffré entre serveur mosquitto et le client ESP8266|
 
 <h3 id="raspiraspi"> Raspberry Pi et Raspberry Pi : LoRa </h3>
 
-Le Raspberry Pi qui est configurer avec le serveur MQTT va se comporter comme un client LoRa en récupérant la donnée publier par le composant ESP8266 et l'envoi au second Raspberry Pi qui se comporte comme serveur à travers une communication Radio LoRa.
+Le Raspberry Pi qui est configurer avec le serveur MQTT va se comporter comme un client LoRa en récupérant la donnée publiée par le composant ESP8266 et l'envoi au second Raspberry Pi qui se comporte comme serveur à travers une communication Radio LoRa.
 **Sécurité :** Pour sécuriser les échanges de traffic entre le  Raspberry Pi client et celui serveur on va utiliser un chiffrement **AES-128** puis on utilisera un **Json Web Token (JWT)** chiffré et signé pour l'envoyer au raspberry qui joûe le rôle de serveur.    
 
 Pour utiliser la radio LoRa on  va coiffer nos raspberry Pi d’un dragino, intégrant un « transceiver » LoRa ainsi qu’un GPS.
@@ -633,7 +633,7 @@ Pour Compiler :
 ```cpp
 $ make
 ```
-lancer le programme serveur LoRa
+Lancer le programme serveur LoRa
 ```bash
 $ sudo ./rf95_server
 ```
@@ -641,7 +641,7 @@ Réception du token JWT et déchiffrement coté serveur LoRa|
 :-------------------------------------:
 ![alt text](https://github.com/Amadimk/UNILIM_TMC/blob/master/serveur.png)
 
-lancer le programme client LoRa
+Lancer le programme client LoRa
 ```bash
 $ sudo python3 mqtt_client.py
 ```
