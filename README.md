@@ -440,8 +440,8 @@ Pour lancer la console mos et voir les activités du composant esp8266 :
 ```bash
 $ mos console
 ```
-Solarized dark             |  Solarized Ocean
-:-------------------------:|:-------------------------:
+echange de certificat esp8266-raspberry| Connexion MQTT
+:-------------------------------------:|:-------------------------------------:
 ![](https://github.com/Amadimk/UNILIM_TMC/blob/master/mos.png)  |  ![](https://github.com/Amadimk/UNILIM_TMC/blob/master/mqtt.png)
 
 
