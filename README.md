@@ -14,6 +14,19 @@
   3.2 [Raspberry Pi et Raspberry Pi : LoRa](#raspiraspi)  
 4. [Authors](#authors)  
     
+<hr/>
+
+
+
+
+
+
+
+
+
+
+
+
 
 Le but de ce projet est de créer un réseau de capteurs (ESP8266) connectés par WiFi vers un concentrateur (un Raspberry Pi) où chaque capteur va exploiter un circuit dédié à la cryptographie sur courbe elliptique (un ATECC508) connecté à l’ESP8266 qui à travers Mongoose publie à intervalle régulier la donnée capturé sur un serveur MQTT securisé par l’utilisation de certificats et du protocole TLS, cette donnée sera ensuite chiffré et transmis  entre deux concentrateurs à travers le protocole LoRa.
 
@@ -24,7 +37,7 @@ Le but de ce projet est de créer un réseau de capteurs (ESP8266) connectés pa
 
 <h3 id="preparation"> Préparation du démarrage bootp, PXE du Raspberry Pi</h3>
 
-Cette partie de la configuration provient des enseignements de Mr PIERRE-FRANCOIS BONNEFOI dans le TP3  de l'UE TMC et est accessible sur son site web : [p-fb.net](https://p-fb.net/master-2/tmc.html?L=0).
+Cette partie de la configuration et plusieurs autres proviennent des enseignements de Mr PIERRE-FRANCOIS BONNEFOI de l'UE TMC et est accessible sur son site web : [p-fb.net](https://p-fb.net/master-2/tmc.html?L=0).
 
 * Tout d'abord on crée un repertoire `RASPI` dédié au *«filesystem»* du Raspberry PI  et on crée ensuite deux sous-répertoire : un nommé `client` contenant l’intégralité du système Raspbian du Raspberry ( répertoires `/etc`, `/home`, `/bin`, etc.) qui sera accessible par le protocole NFS qu'on utilisera pour le bootage en mode réseau et un autre nommé `boot` contenant le noyau et les fichiers de *«bas-niveau»* pour le Raspberry Pi lui-même, qui sera accessible par le protocole bootp;
 
